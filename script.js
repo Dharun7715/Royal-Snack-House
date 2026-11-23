@@ -116,9 +116,24 @@ logoutButton.addEventListener("click",async()=>{
  window.location.href="index.html";
 });
 loadLiveProducts();
+async function syncAuthSession(){
+ try{
+  const {data,error}=await authClient.auth.getSession();
+  if(error)throw error;
+  updateAuthUI(data.session);
+ }catch(error){
+  console.warn("Could not sync saved session:",error);
+ }
+}
+// Restore the correct signed-in state when returning to a page kept in
+// the browser's back-forward cache, or when switching back to this tab.
 authClient.auth.getSession().then(({data,error})=>{
  if(error){console.warn("Could not restore saved session:",error);return;}
  updateAuthUI(data.session);
+});
+window.addEventListener("pageshow",()=>syncAuthSession());
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="visible")syncAuthSession();
 });
 authClient.auth.onAuthStateChange((_event,session)=>updateAuthUI(session));
 function authMessage(message,isError=false){const node=document.getElementById("storeLoginError");node.textContent=message;node.style.color=isError?"#a12b2b":"#276344";}
