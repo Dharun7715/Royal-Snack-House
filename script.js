@@ -66,12 +66,56 @@ el("menuToggle").addEventListener("click",()=>el("navLinks").classList.toggle("o
 document.querySelectorAll("#navLinks a").forEach(a=>a.addEventListener("click",()=>el("navLinks").classList.remove("open")));
 el("year").textContent=new Date().getFullYear();renderProducts();renderCart();
 
-// Shared storefront login: admin/staff accounts are routed to the admin console.
+// Shared authentication: owners/staff enter admin, customers enter their account.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 const authClient=createClient("https://ubwdtuggqftzzdkdlzpj.supabase.co","sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h");
 const loginOverlay=document.getElementById("loginOverlay");
-function closeStoreLogin(){loginOverlay.classList.remove("open");loginOverlay.setAttribute("aria-hidden","true");document.getElementById("storeLoginError").textContent="";}
-document.getElementById("loginButton").addEventListener("click",()=>{loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");});
+let authMode="signin";
+function authMessage(message,isError=false){const node=document.getElementById("storeLoginError");node.textContent=message;node.style.color=isError?"#a12b2b":"#276344";}
+function setAuthMode(mode){
+ authMode=mode;const signup=mode==="signup";
+ document.getElementById("authHeading").textContent=signup?"Create your account.":"Welcome back.";
+ document.getElementById("authSubheading").textContent=signup?"Join the Royal Snack House family.":"Sign in to continue.";
+ document.getElementById("authNameWrap").hidden=!signup;
+ document.getElementById("storeLoginName").required=signup;
+ document.getElementById("storeLoginSubmit").textContent=signup?"Create account ↗":"Sign in ↗";
+ document.getElementById("forgotPassword").hidden=signup;
+ document.getElementById("showSignIn").classList.toggle("active",!signup);
+ document.getElementById("showSignUp").classList.toggle("active",signup);
+ document.getElementById("storeLoginPassword").autocomplete=signup?"new-password":"current-password";
+ authMessage("");
+}
+function closeStoreLogin(){loginOverlay.classList.remove("open");loginOverlay.setAttribute("aria-hidden","true");authMessage("");}
+document.getElementById("loginButton").addEventListener("click",()=>{setAuthMode("signin");loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");});
 document.getElementById("closeLogin").addEventListener("click",closeStoreLogin);
 loginOverlay.addEventListener("click",e=>{if(e.target===loginOverlay)closeStoreLogin();});
-document.getElementById("storeLoginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=document.getElementById("storeLoginSubmit"),err=document.getElementById("storeLoginError");btn.disabled=true;err.textContent="Signing in…";try{const {data,error}=await authClient.auth.signInWithPassword({email:document.getElementById("storeLoginEmail").value.trim(),password:document.getElementById("storeLoginPassword").value});if(error)throw error;const response=await fetch("https://ubwdtuggqftzzdkdlzpj.supabase.co/functions/v1/admin-api",{method:"POST",headers:{"Content-Type":"application/json","apikey":"sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h","Authorization":"Bearer "+data.session.access_token},body:JSON.stringify({action:"overview"})});const result=await response.json();if(response.ok&&result.profile&&(result.profile.role==="owner"||result.profile.role==="staff")){location.href="admin.html";return;}await authClient.auth.signOut();throw new Error("This account does not have admin access. Customer accounts are not enabled yet.");}catch(error){err.textContent=error.message||"Unable to sign in.";}finally{btn.disabled=false;}});
+document.getElementById("showSignIn").addEventListener("click",()=>setAuthMode("signin"));
+document.getElementById("showSignUp").addEventListener("click",()=>setAuthMode("signup"));
+document.getElementById("forgotPassword").addEventListener("click",async()=>{
+ const email=document.getElementById("storeLoginEmail").value.trim();
+ if(!email)return authMessage("Enter your email address first.",true);
+ const {error}=await authClient.auth.resetPasswordForEmail(email,{redirectTo:"https://royalsnackhouse.onrender.com/customer.html"});
+ authMessage(error?error.message:"If this email has an account, a password reset link will be sent. Check your inbox.");
+});
+document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
+ e.preventDefault();const btn=document.getElementById("storeLoginSubmit");btn.disabled=true;authMessage(authMode==="signup"?"Creating your account…":"Signing in…");
+ const email=document.getElementById("storeLoginEmail").value.trim().toLowerCase(),password=document.getElementById("storeLoginPassword").value;
+ try{
+  if(authMode==="signup"){
+   const fullName=document.getElementById("storeLoginName").value.trim();
+   if(!fullName)throw new Error("Please enter your name.");
+   const {data,error}=await authClient.auth.signUp({email,password,options:{data:{full_name:fullName,display_name:fullName},emailRedirectTo:"https://royalsnackhouse.onrender.com/customer.html"}});
+   if(error)throw error;
+   if(data.session){location.href="customer.html";return;}
+   authMessage("Account created. Please check your email and confirm your address before signing in.");
+   return;
+  }
+  const {data,error}=await authClient.auth.signInWithPassword({email,password});if(error)throw error;
+  const response=await fetch("https://ubwdtuggqftzzdkdlzpj.supabase.co/functions/v1/admin-api",{method:"POST",headers:{"Content-Type":"application/json","apikey":"sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h","Authorization":"Bearer "+data.session.access_token},body:JSON.stringify({action:"overview"})});
+  const result=await response.json();
+  if(response.ok&&result.profile&&(result.profile.role==="owner"||result.profile.role==="staff")){location.href="admin.html";return;}
+  if(response.status===403){location.href="customer.html";return;}
+  throw new Error(result.error||"Unable to verify your account. Please try again.");
+ }catch(error){authMessage(error.message||"Unable to continue.",true);}
+ finally{btn.disabled=false;}
+});
