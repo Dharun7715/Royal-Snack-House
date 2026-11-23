@@ -43,7 +43,7 @@ function makeWhatsAppMessage(message){
  window.open("https://wa.me/"+STORE.whatsappNumber+"?text="+encodeURIComponent(message),"_blank","noopener");
 }
 async function submitOrder(event){
- event.preventDefault();const rows=cartRows();if(!rows.length)return toast("Your shopping bag is empty");
+ event.preventDefault();const formElement=event.currentTarget;const rows=cartRows();if(!rows.length)return toast("Your shopping bag is empty");
  const form=new FormData(event.currentTarget),name=String(form.get("customerName")||"").trim(),phone=String(form.get("phone")||"").trim(),address=String(form.get("address")||"").trim(),delivery=form.get("delivery");
  if(delivery==="Delivery"&&!address)return toast("Please enter your delivery address");
  const items=rows.map(r=>r.product.name+" x "+r.quantity+" — "+money(r.product.price*r.quantity)).join("\n");
@@ -52,7 +52,7 @@ async function submitOrder(event){
   const payload=rows.map(r=>({product_id:Number(r.product.id),quantity:r.quantity}));
   const {data,error}=await authClient.rpc("create_store_order",{p_customer_name:name,p_phone:phone,p_delivery_address:address,p_delivery_type:delivery,p_items:payload,p_coupon_code:String(form.get("couponCode")||"").trim()||null,p_notes:null});
   if(error)throw error;
-  cart={};persist();renderCart();event.currentTarget.reset();closeCart();
+  cart={};persist();renderCart();formElement.reset();closeCart();
   toast("Order "+data.order_number+" placed successfully! We'll contact you shortly.");
   const receipt="Hello Royal Snack House! My order "+data.order_number+" has been placed. Total: "+money(data.total)+". Name: "+name+". Phone: "+phone+".";
   if(STORE.whatsappNumber)window.open("https://wa.me/"+STORE.whatsappNumber+"?text="+encodeURIComponent(receipt),"_blank","noopener");
