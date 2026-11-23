@@ -178,7 +178,7 @@ document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
   }catch(checkError){
    console.warn("Admin profile check unavailable; continuing to shop.",checkError);
   }
-  window.location.replace(isAdmin?"admin.html":"index.html#shop");
+  closeStoreLogin();updateAuthUI(data.session);const destination=isAdmin?new URL("admin.html",window.location.href).href:new URL("index.html#home",window.location.href).href;window.location.assign(destination);
   return;
  }catch(error){authMessage(error.message||"Unable to continue.",true);}
  finally{btn.disabled=false;}
