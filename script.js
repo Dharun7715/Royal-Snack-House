@@ -31,9 +31,10 @@ function addToCart(id){cart[id]=(cart[id]||0)+1;persist();renderCart();toast("Ad
 function changeQty(id,amount){cart[id]=(cart[id]||0)+amount;if(cart[id]<=0)delete cart[id];persist();renderCart();}
 function cartRows(){return Object.entries(cart).map(([id,quantity])=>({product:products.find(p=>p.id===Number(id)),quantity})).filter(row=>row.product);}
 function cartTotal(){return cartRows().reduce((sum,row)=>sum+row.product.price*row.quantity,0);}
+function estimatedDeliveryCharge(subtotal){return subtotal>=500||subtotal===0?0:40;}
 function renderCart(){
  const rows=cartRows(),count=rows.reduce((sum,row)=>sum+row.quantity,0);
- el("bagCount").textContent=count;el("cartTotal").textContent=money(cartTotal());
+ el("bagCount").textContent=count;const subtotal=cartTotal(),charge=estimatedDeliveryCharge(subtotal);el("cartTotal").textContent=money(subtotal+charge);const deliveryNote=el("deliveryEstimate");if(deliveryNote)deliveryNote.textContent=subtotal===0?"Delivery: ₹40 below ₹500 · Free from ₹500":"Items "+money(subtotal)+" · Delivery "+(charge===0?"FREE":money(charge))+" · Estimated 2–3 days";
  el("cartItems").innerHTML=rows.length?rows.map(({product:p,quantity:q})=>`<div class="cart-line"><img src="${escapeHTML(p.image)}" alt=""><div><h4>${escapeHTML(p.name)}</h4><small>${money(p.price)} each</small><div class="qty-controls"><button data-qty="${p.id}" data-change="-1">−</button><span>${q}</span><button data-qty="${p.id}" data-change="1">+</button></div></div><b>${money(p.price*q)}</b></div>`).join(""):'<div class="empty-cart">Your bag is waiting for something delicious.</div>';
 }
 function openCart(){el("backdrop").classList.add("show");el("cartDrawer").classList.add("show");}
@@ -44,7 +45,7 @@ function makeWhatsAppMessage(message){
 }
 async function submitOrder(event){
  event.preventDefault();const formElement=event.currentTarget;const rows=cartRows();if(!rows.length)return toast("Your shopping bag is empty");
- const form=new FormData(event.currentTarget),name=String(form.get("customerName")||"").trim(),phone=String(form.get("phone")||"").trim(),address=String(form.get("address")||"").trim(),delivery=form.get("delivery");
+ const form=new FormData(event.currentTarget),name=String(form.get("customerName")||"").trim(),phone=String(form.get("phone")||"").trim(),address=String(form.get("address")||"").trim(),delivery="Delivery";
  if(delivery==="Delivery"&&!address)return toast("Please enter your delivery address");
  const items=rows.map(r=>r.product.name+" x "+r.quantity+" — "+money(r.product.price*r.quantity)).join("\n");
  const button=event.submitter;button.disabled=true;button.textContent="Placing order…";
@@ -54,7 +55,7 @@ async function submitOrder(event){
   if(error)throw error;
   cart={};persist();renderCart();formElement.reset();closeCart();
   toast("Order "+data.order_number+" placed successfully! We'll contact you shortly.");
-  const receipt="Hello Royal Snack House! My order "+data.order_number+" has been placed. Total: "+money(data.total)+". Name: "+name+". Phone: "+phone+".";
+  const receipt="Hello Royal Snack House! My order "+data.order_number+" has been placed. Items: "+money(data.subtotal-data.discount)+". Delivery: "+money(data.delivery_charge||0)+". Total: "+money(data.total)+". Name: "+name+". Phone: "+phone+".";
   if(STORE.whatsappNumber)window.open("https://wa.me/"+STORE.whatsappNumber+"?text="+encodeURIComponent(receipt),"_blank","noopener");
  }catch(error){toast(error.message||"Unable to place order. Please try again.");}
  finally{button.disabled=false;button.textContent="Place order ↗";}
