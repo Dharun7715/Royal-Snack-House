@@ -42,13 +42,22 @@ function makeWhatsAppMessage(message){
  if(!STORE.whatsappNumber){navigator.clipboard?.writeText(message).then(()=>toast("Message copied. Add the WhatsApp number in script.js to enable direct ordering.")).catch(()=>toast("Please configure the WhatsApp number in script.js."));return;}
  window.open("https://wa.me/"+STORE.whatsappNumber+"?text="+encodeURIComponent(message),"_blank","noopener");
 }
-function submitOrder(event){
+async function submitOrder(event){
  event.preventDefault();const rows=cartRows();if(!rows.length)return toast("Your shopping bag is empty");
  const form=new FormData(event.currentTarget),name=String(form.get("customerName")||"").trim(),phone=String(form.get("phone")||"").trim(),address=String(form.get("address")||"").trim(),delivery=form.get("delivery");
  if(delivery==="Delivery"&&!address)return toast("Please enter your delivery address");
  const items=rows.map(r=>r.product.name+" x "+r.quantity+" — "+money(r.product.price*r.quantity)).join("\n");
- const message="Hello Royal Snack House! I'd like to place an order:\n\n"+items+"\n\nTotal: "+money(cartTotal())+"\n\nName: "+name+"\nPhone: "+phone+"\nOrder type: "+delivery+"\nAddress: "+(address||"Store pickup");
- makeWhatsAppMessage(message);
+ const button=event.submitter;button.disabled=true;button.textContent="Placing order…";
+ try{
+  const payload=rows.map(r=>({product_id:Number(r.product.id),quantity:r.quantity}));
+  const {data,error}=await authClient.rpc("create_store_order",{p_customer_name:name,p_phone:phone,p_delivery_address:address,p_delivery_type:delivery,p_items:payload,p_coupon_code:String(form.get("couponCode")||"").trim()||null,p_notes:null});
+  if(error)throw error;
+  cart={};persist();renderCart();event.currentTarget.reset();closeCart();
+  toast("Order "+data.order_number+" placed successfully! We'll contact you shortly.");
+  const receipt="Hello Royal Snack House! My order "+data.order_number+" has been placed. Total: "+money(data.total)+". Name: "+name+". Phone: "+phone+".";
+  if(STORE.whatsappNumber)window.open("https://wa.me/"+STORE.whatsappNumber+"?text="+encodeURIComponent(receipt),"_blank","noopener");
+ }catch(error){toast(error.message||"Unable to place order. Please try again.");}
+ finally{button.disabled=false;button.textContent="Place order ↗";}
 }
 function submitContact(event){
  event.preventDefault();const form=new FormData(event.currentTarget);
@@ -70,6 +79,15 @@ el("year").textContent=new Date().getFullYear();renderProducts();renderCart();
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 const authClient=createClient("https://ubwdtuggqftzzdkdlzpj.supabase.co","sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage}});
 const loginOverlay=document.getElementById("loginOverlay");
+
+async function loadLiveProducts(){
+ try{
+  const {data,error}=await authClient.from("products").select("id,name,category,description,price,weight,image_url,tag,is_active,stock_quantity").eq("is_active",true).order("id");
+  if(error)throw error;
+  if(data?.length){products=data.map(p=>({id:p.id,name:p.name,category:p.category,price:Number(p.price),weight:p.weight||"",tag:p.tag||p.category,desc:p.description||"",image:p.image_url||"",stock_quantity:p.stock_quantity}));localStorage.setItem("rhs_products",JSON.stringify(products));renderProducts();renderCart();}
+ }catch(error){console.warn("Live product catalogue unavailable; showing cached catalogue.",error);}
+}
+
 let authMode="signin";
 let currentAuthSession=null;
 const loginButton=document.getElementById("loginButton");
@@ -95,6 +113,7 @@ logoutButton.addEventListener("click",async()=>{
  updateAuthUI(null);toast("You have been signed out.");
  window.location.href="index.html";
 });
+loadLiveProducts();
 authClient.auth.getSession().then(({data,error})=>{
  if(error){console.warn("Could not restore saved session:",error);return;}
  updateAuthUI(data.session);
