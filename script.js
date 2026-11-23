@@ -72,7 +72,7 @@ document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListen
 document.querySelectorAll("[data-category]").forEach(button=>button.addEventListener("click",()=>setCategory(button.dataset.category)));
 el("searchInput").addEventListener("input",renderProducts);
 el("bagButton").addEventListener("click",openCart);el("closeCart").addEventListener("click",closeCart);el("backdrop").addEventListener("click",closeCart);
-el("checkoutForm").addEventListener("submit",submitOrder);el("contactForm").addEventListener("submit",submitContact);
+el("checkoutForm").addEventListener("submit",submitOrder);const contactForm=el("contactForm");if(contactForm)contactForm.addEventListener("submit",submitContact);
 el("menuToggle").addEventListener("click",()=>el("navLinks").classList.toggle("open"));
 document.querySelectorAll("#navLinks a").forEach(a=>a.addEventListener("click",()=>el("navLinks").classList.remove("open")));
 el("year").textContent=new Date().getFullYear();renderProducts();renderCart();
