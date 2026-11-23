@@ -108,3 +108,26 @@
 #storeLoginError{line-height:1.5;overflow-wrap:anywhere}
 .store-login-card .auth-terms{margin-top:2px}
 @media(max-width:480px){.login-overlay{padding:12px}.store-login-card{padding:34px 22px 24px;border-radius:16px;gap:12px}.store-login-card h2{font-size:29px}}
+
+
+/* FAQ section: content-led cards with balanced spacing */
+#faq{padding-top:76px;padding-bottom:82px}
+#faq .section-heading{margin-bottom:34px}
+#faq .section-heading h2{font-size:clamp(36px,4.2vw,58px);line-height:1.12}
+#faq .collection-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;align-items:stretch}
+#faq .collection-card{min-height:0;height:100%;padding:30px 22px 28px;justify-content:flex-start;gap:11px}
+#faq .collection-card b{font-size:clamp(18px,1.55vw,23px);line-height:1.25}
+#faq .collection-card small{font-size:12px;line-height:1.65;margin-top:0;max-width:290px}
+@media(max-width:900px){
+ #faq .collection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #faq .collection-card{padding:26px 18px}
+}
+@media(max-width:560px){
+ #faq{padding-top:54px;padding-bottom:58px}
+ #faq .section-heading{margin-bottom:24px}
+ #faq .section-heading h2{font-size:34px}
+ #faq .collection-grid{grid-template-columns:1fr;gap:12px}
+ #faq .collection-card{padding:22px 18px;min-height:0}
+ #faq .collection-card b{font-size:20px}
+ #faq .collection-card small{font-size:12px;line-height:1.6}
+}
