@@ -65,3 +65,13 @@ el("checkoutForm").addEventListener("submit",submitOrder);el("contactForm").addE
 el("menuToggle").addEventListener("click",()=>el("navLinks").classList.toggle("open"));
 document.querySelectorAll("#navLinks a").forEach(a=>a.addEventListener("click",()=>el("navLinks").classList.remove("open")));
 el("year").textContent=new Date().getFullYear();renderProducts();renderCart();
+
+// Shared storefront login: admin/staff accounts are routed to the admin console.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+const authClient=createClient("https://ubwdtuggqftzzdkdlzpj.supabase.co","sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h");
+const loginOverlay=document.getElementById("loginOverlay");
+function closeStoreLogin(){loginOverlay.classList.remove("open");loginOverlay.setAttribute("aria-hidden","true");document.getElementById("storeLoginError").textContent="";}
+document.getElementById("loginButton").addEventListener("click",()=>{loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");});
+document.getElementById("closeLogin").addEventListener("click",closeStoreLogin);
+loginOverlay.addEventListener("click",e=>{if(e.target===loginOverlay)closeStoreLogin();});
+document.getElementById("storeLoginForm").addEventListener("submit",async e=>{e.preventDefault();const btn=document.getElementById("storeLoginSubmit"),err=document.getElementById("storeLoginError");btn.disabled=true;err.textContent="Signing in…";try{const {data,error}=await authClient.auth.signInWithPassword({email:document.getElementById("storeLoginEmail").value.trim(),password:document.getElementById("storeLoginPassword").value});if(error)throw error;const response=await fetch("https://ubwdtuggqftzzdkdlzpj.supabase.co/functions/v1/admin-api",{method:"POST",headers:{"Content-Type":"application/json","apikey":"sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h","Authorization":"Bearer "+data.session.access_token},body:JSON.stringify({action:"overview"})});const result=await response.json();if(response.ok&&result.profile&&(result.profile.role==="owner"||result.profile.role==="staff")){location.href="admin.html";return;}await authClient.auth.signOut();throw new Error("This account does not have admin access. Customer accounts are not enabled yet.");}catch(error){err.textContent=error.message||"Unable to sign in.";}finally{btn.disabled=false;}});
