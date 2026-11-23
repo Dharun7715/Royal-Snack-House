@@ -86,7 +86,7 @@ function setAuthMode(mode){
  authMessage("");
 }
 function closeStoreLogin(){loginOverlay.classList.remove("open");loginOverlay.setAttribute("aria-hidden","true");authMessage("");}
-document.getElementById("loginButton").addEventListener("click",()=>{setAuthMode("signin");loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");});
+document.getElementById("loginButton").addEventListener("click",()=>{setAuthMode("signin");loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");});\ndocument.getElementById("signupButton").addEventListener("click",()=>{setAuthMode("signup");loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");});
 document.getElementById("closeLogin").addEventListener("click",closeStoreLogin);
 loginOverlay.addEventListener("click",e=>{if(e.target===loginOverlay)closeStoreLogin();});
 document.getElementById("showSignIn").addEventListener("click",()=>setAuthMode("signin"));
