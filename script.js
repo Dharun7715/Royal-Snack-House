@@ -112,11 +112,26 @@ document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
    return;
   }
   const {data,error}=await authClient.auth.signInWithPassword({email,password});if(error)throw error;
-  const response=await fetch("https://ubwdtuggqftzzdkdlzpj.supabase.co/functions/v1/admin-api",{method:"POST",headers:{"Content-Type":"application/json","apikey":"sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h","Authorization":"Bearer "+data.session.access_token},body:JSON.stringify({action:"overview"})});
-  const result=await response.json();
-  if(response.ok&&result.profile&&(result.profile.role==="owner"||result.profile.role==="staff")){location.href="admin.html";return;}
-  if(response.status===403){location.href="index.html#shop";return;}
-  throw new Error(result.error||"Unable to verify your account. Please try again.");
+  // A successful Supabase sign-in is enough to enter the shop.
+  // Only a confirmed active owner/staff profile should be routed to admin.
+  let isAdmin=false;
+  try{
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),5000);
+   const response=await fetch("https://ubwdtuggqftzzdkdlzpj.supabase.co/functions/v1/admin-api",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","apikey":"sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h","Authorization":"Bearer "+data.session.access_token},
+    body:JSON.stringify({action:"overview"}),
+    signal:controller.signal
+   });
+   clearTimeout(timeout);
+   const result=await response.json().catch(()=>({}));
+   isAdmin=response.ok&&result.profile&&result.profile.is_active!==false&&(result.profile.role==="owner"||result.profile.role==="staff");
+  }catch(checkError){
+   console.warn("Admin profile check unavailable; continuing to shop.",checkError);
+  }
+  window.location.replace(isAdmin?"admin.html":"index.html#shop");
+  return;
  }catch(error){authMessage(error.message||"Unable to continue.",true);}
  finally{btn.disabled=false;}
 });
