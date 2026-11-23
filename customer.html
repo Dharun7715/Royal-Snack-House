@@ -6,12 +6,61 @@ import {createClient} from "https://esm.sh/@supabase/supabase-js@2.57.0";
 const supabase=createClient("https://ubwdtuggqftzzdkdlzpj.supabase.co","sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h");
 const status=document.getElementById("accountStatus");
 const recoveryForm=document.getElementById("recoveryForm");
-const {data:{session}}=await supabase.auth.getSession();
-if(!session){location.replace("index.html");}
-else{document.getElementById("accountEmail").textContent=session.user.email||"—";document.getElementById("accountName").textContent=session.user.user_metadata?.full_name||session.user.user_metadata?.display_name||"Royal Snack House customer";}
-const revealRecovery=()=>{recoveryForm.hidden=false;recoveryForm.style.display="grid";status.textContent="Choose a new password for your account.";};
-if(location.hash.includes("type=recovery"))revealRecovery();
-supabase.auth.onAuthStateChange(event=>{if(event==="PASSWORD_RECOVERY")revealRecovery();});
-recoveryForm.addEventListener("submit",async e=>{e.preventDefault();const password=document.getElementById("newPassword").value;if(password.length<8){status.textContent="Use at least 8 characters.";return;}const {error}=await supabase.auth.updateUser({password});if(error){status.textContent=error.message;return;}status.textContent="Password updated successfully. You can now sign in with your new password.";recoveryForm.style.display="none";});
-document.getElementById("accountSignOut").addEventListener("click",async()=>{const {error}=await supabase.auth.signOut();if(error){status.textContent=error.message;return;}location.href="index.html";});
+const emailNode=document.getElementById("accountEmail");
+const nameNode=document.getElementById("accountName");
+const url=new URL(window.location.href);
+const hashParams=new URLSearchParams(url.hash.replace(/^#/,""));
+const recoveryRequested=url.searchParams.has("code")||url.searchParams.get("type")==="recovery"||hashParams.get("type")==="recovery"||hashParams.has("access_token");
+let currentSession=null;
+function showRecovery(){
+ recoveryForm.hidden=false;
+ recoveryForm.style.display="grid";
+ document.querySelector(".account-card h1").textContent="Create a new password.";
+ status.textContent="Your reset link has opened. Enter and confirm your new password below.";
+}
+function showAccount(session){
+ currentSession=session;
+ emailNode.textContent=session.user.email||"—";
+ nameNode.textContent=session.user.user_metadata?.full_name||session.user.user_metadata?.display_name||"Royal Snack House customer";
+}
+function showSignedOut(message){
+ emailNode.textContent="Not signed in";
+ nameNode.textContent="—";
+ status.textContent=message;
+}
+supabase.auth.onAuthStateChange((event,session)=>{
+ if(session)showAccount(session);
+ if(event==="PASSWORD_RECOVERY"||recoveryRequested)showRecovery();
+});
+const {data,error}=await supabase.auth.getSession();
+if(error){
+ showSignedOut("This reset link could not be verified. Please request a fresh password reset link.");
+ if(recoveryRequested)showRecovery();
+}else if(data.session){
+ showAccount(data.session);
+ if(recoveryRequested)showRecovery();
+}else if(recoveryRequested){
+ showSignedOut("The reset link was opened, but no recovery session was found. It may have expired or already been used. Request a new reset email.");
+ showRecovery();
+}else{
+ showSignedOut("Sign in from the shop page to view your account.");
+}
+recoveryForm.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const password=document.getElementById("newPassword").value;
+ if(password.length<8){status.textContent="Use at least 8 characters.";return;}
+ const submit=recoveryForm.querySelector("button[type=submit]");
+ submit.disabled=true;status.textContent="Updating your password…";
+ const {data,error}=await supabase.auth.updateUser({password});
+ submit.disabled=false;
+ if(error){status.textContent="Could not update password: "+error.message;return;}
+ status.textContent="Password updated successfully. You can now sign in with your new password.";
+ recoveryForm.reset();recoveryForm.style.display="none";recoveryForm.hidden=true;
+ if(data.user)showAccount({user:data.user});
+});
+document.getElementById("accountSignOut").addEventListener("click",async()=>{
+ const {error}=await supabase.auth.signOut();
+ if(error){status.textContent=error.message;return;}
+ location.href="index.html";
+});
 </script></body></html>
