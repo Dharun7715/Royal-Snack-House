@@ -85,3 +85,26 @@
  .product-info p{font-size:9px}
  .details-button{font-size:7px}
 }
+
+
+/* Royal Snack House — refined authentication experience */
+.login-overlay{z-index:120;background:rgba(3,12,8,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:22px}
+.store-login-card{width:min(440px,100%);padding:42px 38px 30px;border:1px solid rgba(190,151,82,.42);border-radius:20px;background:linear-gradient(155deg,#fffdf8 0%,#f4eddf 100%);box-shadow:0 32px 100px rgba(0,0,0,.42);gap:14px;animation:authCardIn .24s ease-out}
+@keyframes authCardIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.login-crest{width:58px;height:58px;margin:0 auto 2px;display:grid;place-items:center;border:1px solid #c49a55;border-radius:50%;background:#102b20;color:#e5c27d;font-size:29px;box-shadow:0 0 0 6px rgba(196,154,85,.12)}
+.store-login-card>small:first-of-type{letter-spacing:3.5px;font-weight:700}
+.store-login-card h2{font-size:clamp(29px,5vw,35px);letter-spacing:-.6px}
+.store-login-card p{line-height:1.65}
+.store-login-card label{gap:8px;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+.store-login-card input{width:100%;min-height:48px;padding:13px 14px;border:1px solid #d9cfbc;border-radius:9px;background:rgba(255,255,255,.82);font:500 14px var(--sans);color:var(--ink);transition:border-color .2s,box-shadow .2s}
+.store-login-card input:focus{border-color:#b68a43;box-shadow:0 0 0 3px rgba(182,138,67,.14);outline:none}
+.auth-tabs{border:1px solid #e2d7c3;border-radius:11px;background:#eee6d7;padding:4px}
+.auth-tab{border-radius:8px;padding:12px;font-size:10px;letter-spacing:.5px}
+.auth-tab.active{background:linear-gradient(135deg,#173c2b,#071b13);box-shadow:0 3px 10px #071b1322}
+.store-login-card .gold-button{min-height:49px;border-radius:9px;font-size:10px;letter-spacing:1.4px}
+.auth-link{justify-self:center;padding:8px 12px}
+.login-close{width:34px;height:34px;right:12px;top:12px;border-radius:50%;color:#526154;transition:background .2s}
+.login-close:hover{background:#e9dfcc}
+#storeLoginError{line-height:1.5;overflow-wrap:anywhere}
+.store-login-card .auth-terms{margin-top:2px}
+@media(max-width:480px){.login-overlay{padding:12px}.store-login-card{padding:34px 22px 24px;border-radius:16px;gap:12px}.store-login-card h2{font-size:29px}}
