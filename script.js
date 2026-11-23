@@ -107,7 +107,7 @@ document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
    if(!fullName)throw new Error("Please enter your name.");
    const {data,error}=await authClient.auth.signUp({email,password,options:{data:{full_name:fullName,display_name:fullName},emailRedirectTo:"https://royalsnackhouse.onrender.com/customer.html"}});
    if(error)throw error;
-   if(data.session){location.href="customer.html";return;}
+   if(data.session){location.href="index.html#shop";return;}
    authMessage("Account created. Please check your email and confirm your address before signing in.");
    return;
   }
@@ -115,7 +115,7 @@ document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
   const response=await fetch("https://ubwdtuggqftzzdkdlzpj.supabase.co/functions/v1/admin-api",{method:"POST",headers:{"Content-Type":"application/json","apikey":"sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h","Authorization":"Bearer "+data.session.access_token},body:JSON.stringify({action:"overview"})});
   const result=await response.json();
   if(response.ok&&result.profile&&(result.profile.role==="owner"||result.profile.role==="staff")){location.href="admin.html";return;}
-  if(response.status===403){location.href="customer.html";return;}
+  if(response.status===403){location.href="index.html#shop";return;}
   throw new Error(result.error||"Unable to verify your account. Please try again.");
  }catch(error){authMessage(error.message||"Unable to continue.",true);}
  finally{btn.disabled=false;}
