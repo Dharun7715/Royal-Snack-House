@@ -68,9 +68,38 @@ el("year").textContent=new Date().getFullYear();renderProducts();renderCart();
 
 // Shared authentication: owners/staff enter admin, customers enter their account.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
-const authClient=createClient("https://ubwdtuggqftzzdkdlzpj.supabase.co","sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h");
+const authClient=createClient("https://ubwdtuggqftzzdkdlzpj.supabase.co","sb_publishable_LtOda0MxMFrN_laGRH67LA_FcQn6v7h",{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storage:window.localStorage}});
 const loginOverlay=document.getElementById("loginOverlay");
 let authMode="signin";
+let currentAuthSession=null;
+const loginButton=document.getElementById("loginButton");
+const signupButton=document.getElementById("signupButton");
+const logoutButton=document.createElement("button");
+logoutButton.type="button";logoutButton.className="nav-btn";logoutButton.id="customerLogoutButton";logoutButton.textContent="Log out";logoutButton.hidden=true;
+signupButton.insertAdjacentElement("afterend",logoutButton);
+function updateAuthUI(session){
+ currentAuthSession=session||null;
+ loginButton.textContent=session?"My account":"Login";
+ signupButton.hidden=!!session;
+ logoutButton.hidden=!session;
+}
+loginButton.addEventListener("click",()=>{
+ if(currentAuthSession){window.location.href="customer.html";return;}
+ setAuthMode("signin");loginOverlay.classList.add("open");loginOverlay.setAttribute("aria-hidden","false");
+});
+logoutButton.addEventListener("click",async()=>{
+ logoutButton.disabled=true;
+ const {error}=await authClient.auth.signOut();
+ logoutButton.disabled=false;
+ if(error){toast(error.message);return;}
+ updateAuthUI(null);toast("You have been signed out.");
+ window.location.href="index.html";
+});
+authClient.auth.getSession().then(({data,error})=>{
+ if(error){console.warn("Could not restore saved session:",error);return;}
+ updateAuthUI(data.session);
+});
+authClient.auth.onAuthStateChange((_event,session)=>updateAuthUI(session));
 function authMessage(message,isError=false){const node=document.getElementById("storeLoginError");node.textContent=message;node.style.color=isError?"#a12b2b":"#276344";}
 function setAuthMode(mode){
  authMode=mode;const signup=mode==="signup";
@@ -111,7 +140,7 @@ document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
    authMessage("Account created. Please check your email and confirm your address before signing in.");
    return;
   }
-  const {data,error}=await authClient.auth.signInWithPassword({email,password});if(error)throw error;
+  const signInResult=await Promise.race([authClient.auth.signInWithPassword({email,password}),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Sign-in is taking too long. Check your internet connection and try again.")),12000))]);const {data,error}=signInResult;if(error)throw error;
   // A successful Supabase sign-in is enough to enter the shop.
   // Only a confirmed active owner/staff profile should be routed to admin.
   let isAdmin=false;
