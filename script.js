@@ -166,6 +166,8 @@ async function loadHomeReviews(){
 }
 
 loadHomeReviews();
+async function loadScheduledCampaignBanner(){const slot=el("campaignBannerSlot");if(!slot)return;try{const {data,error}=await authClient.from("marketing_campaigns").select("title,message,banner_text,starts_at,ends_at").eq("status","ready").order("created_at",{ascending:false}).limit(1);if(error)throw error;const c=data?.[0];if(!c)return;slot.innerHTML='<section class="campaign-live"><div><span class="eyebrow">ROYAL SNACK HOUSE · SPECIAL OFFER</span><h2>'+escapeHTML(c.banner_text||c.title)+'</h2><p>'+escapeHTML(c.message)+'</p></div><a class="gold-button" href="#shop">Explore snacks ↗</a></section>';}catch(e){console.info("No live campaign banner available.",e);}}
+loadScheduledCampaignBanner();
 function authMessage(message,isError=false){const node=document.getElementById("storeLoginError");node.textContent=message;node.style.color=isError?"#a12b2b":"#276344";}
 function setAuthMode(mode){
  authMode=mode;const signup=mode==="signup";
