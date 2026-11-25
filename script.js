@@ -88,7 +88,7 @@ const loginOverlay=document.getElementById("loginOverlay");
 
 async function loadLiveProducts(){
  try{
-  const {data,error}=await authClient.from("products").select("id,name,category,description,price,weight,image_url,tag,is_active,stock_quantity").eq("is_active",true).order("id");
+  const {data,error}=await authClient.from("products").select("id,name,category,description,price,weight,image_url,tag,is_active,stock_quantity,preorder_enabled,preorder_limit,preorder_sold,preorder_deadline,preorder_release_date").eq("is_active",true).order("id");
   if(error)throw error;
   if(data?.length){products=data.map(p=>({id:p.id,name:p.name,category:p.category,price:Number(p.price),weight:p.weight||"",tag:p.tag||p.category,desc:p.description||"",image:p.image_url||"",stock_quantity:p.stock_quantity,preorder_enabled:!!p.preorder_enabled,preorder_limit:p.preorder_limit,preorder_sold:p.preorder_sold,preorder_deadline:p.preorder_deadline,preorder_release_date:p.preorder_release_date}));localStorage.setItem("rhs_products",JSON.stringify(products));renderProducts();renderCart();}
  }catch(error){console.warn("Live product catalogue unavailable; showing cached catalogue.",error);}
