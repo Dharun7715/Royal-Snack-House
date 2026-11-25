@@ -136,6 +136,34 @@ document.addEventListener("visibilitychange",()=>{
  if(document.visibilityState==="visible")syncAuthSession();
 });
 authClient.auth.onAuthStateChange((_event,session)=>updateAuthUI(session));
+
+// Smart coupon helper: previews eligible offers; the database order function remains authoritative.
+const couponButton=document.getElementById("applyBestCoupon");
+if(couponButton)couponButton.addEventListener("click",async()=>{
+ const note=document.getElementById("couponAssistMessage");
+ const codeInput=document.getElementById("checkoutCouponCode");
+ couponButton.disabled=true;note.textContent="Checking available offers…";
+ try{
+  const {data,error}=await authClient.from("coupons").select("code,description,discount_type,discount_value,min_order_value,max_uses,used_count,starts_at,expires_at").eq("is_active",true);
+  if(error)throw error;
+  const subtotal=cartTotal(),now=Date.now();
+  const eligible=(data||[]).filter(c=>(!c.starts_at||new Date(c.starts_at).getTime()<=now)&&(!c.expires_at||new Date(c.expires_at).getTime()>=now)&&(c.max_uses==null||Number(c.used_count)<Number(c.max_uses))&&subtotal>=Number(c.min_order_value||0)).map(c=>({...c,discount:Math.min(subtotal,c.discount_type==="percentage"?subtotal*Number(c.discount_value)/100:Number(c.discount_value))})).sort((a,b)=>b.discount-a.discount);
+  if(!eligible.length){note.textContent="No active coupon matches this basket yet. You can still place your order without a coupon.";return;}
+  codeInput.value=eligible[0].code;
+  note.textContent=eligible[0].code+" applied for preview · You save "+money(eligible[0].discount)+". Final eligibility is checked securely when you place the order.";
+ }catch(error){note.textContent=error.message||"Could not load offers. You can enter a coupon manually.";}
+ finally{couponButton.disabled=false;}
+});
+async function loadHomeReviews(){
+ const target=document.getElementById("homeReviews");if(!target)return;
+ try{
+  const {data,error}=await authClient.from("product_reviews").select("customer_name,rating,review_text,created_at,products(name)").eq("is_published",true).order("created_at",{ascending:false}).limit(3);
+  if(error)throw error;
+  target.innerHTML=(data||[]).length?data.map(r=>'<article class="home-review"><div class="stars" aria-label="'+Number(r.rating)+' out of 5 stars">'+("★".repeat(Math.max(0,Math.min(5,Number(r.rating)))))+("☆".repeat(5-Math.max(0,Math.min(5,Number(r.rating)))))+'</div><h3>'+escapeHTML(r.products?.name||"A Royal favourite")+'</h3><p>'+escapeHTML(r.review_text||"Enjoyed a Royal Snack House favourite.")+'</p><small>'+escapeHTML(r.customer_name||"Royal customer")+'</small></article>').join(""):'<article class="home-review-empty">Be among the first to share your Royal Snack House experience.</article>';
+ }catch(error){console.info("Public reviews are not available for the homepage yet.",error);target.innerHTML='<article class="home-review-empty">Customer stories will appear here soon.</article>';}
+}
+
+loadHomeReviews();
 function authMessage(message,isError=false){const node=document.getElementById("storeLoginError");node.textContent=message;node.style.color=isError?"#a12b2b":"#276344";}
 function setAuthMode(mode){
  authMode=mode;const signup=mode==="signup";
