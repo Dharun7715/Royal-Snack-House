@@ -53,7 +53,7 @@ async function submitOrder(event){
  const button=event.submitter;button.disabled=true;button.textContent="Placing order…";
  try{
   const payload=rows.map(r=>({product_id:Number(r.product.id),quantity:r.quantity}));
-  const {data,error}=await authClient.rpc("create_store_order",{p_customer_name:name,p_phone:phone,p_delivery_address:address,p_delivery_type:delivery,p_items:payload,p_coupon_code:String(form.get("couponCode")||"").trim()||null,p_notes:["Packaging: "+String(form.get("packaging")||"standard"),String(form.get("giftMessage")||"").trim()?"Gift message: "+String(form.get("giftMessage")).trim():""].filter(Boolean).join(" | ")});
+  const {data,error}=await authClient.rpc("create_store_order",{p_customer_name:name,p_phone:phone,p_delivery_address:address,p_delivery_type:delivery,p_items:payload,p_coupon_code:String(form.get("couponCode")||"").trim()||null,p_notes:["Packaging: "+String(form.get("packaging")||"standard"),String(form.get("giftMessage")||"").trim()?"Gift message: "+String(form.get("giftMessage")).trim():"",localStorage.getItem("rhs_box_note")?"Custom box note: "+localStorage.getItem("rhs_box_note"):""].filter(Boolean).join(" | ")});
   if(error)throw error;
   cart={};persist();renderCart();formElement.reset();closeCart();
   toast("Order "+data.order_number+" placed successfully! We'll contact you shortly.");
