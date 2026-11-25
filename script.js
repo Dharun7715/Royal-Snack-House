@@ -233,3 +233,6 @@ document.getElementById("storeLoginForm").addEventListener("submit",async e=>{
  }catch(error){authMessage(error.message||"Unable to continue.",true);}
  finally{btn.disabled=false;}
 });
+
+const bulkForm=document.getElementById("bulkOrderForm");
+if(bulkForm){bulkForm.addEventListener("submit",async e=>{e.preventDefault();const b=bulkForm.querySelector("button[type=submit]"),status=document.getElementById("bulkOrderStatus");b.disabled=true;status.textContent="Sending your enquiry…";try{const f=new FormData(bulkForm),payload=Object.fromEntries(f.entries());payload.estimated_quantity=Number(payload.estimated_quantity);payload.event_date=payload.event_date||null;const {error}=await supabase.from("bulk_order_inquiries").insert(payload);if(error)throw error;bulkForm.reset();status.textContent="Thank you! Your bulk enquiry has been received. Our team will contact you."; }catch(err){status.textContent=err.message||"Unable to submit. Please try again.";}finally{b.disabled=false;}});}
