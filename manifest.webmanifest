@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "Royal Snack House",
+  "short_name": "Royal Snacks",
+  "description": "A royal taste in every bite. Explore Indian snacks from Royal Snack House.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#071b13",
+  "theme_color": "#071b13",
+  "categories": ["food", "shopping"],
+  "icons": [
+    {
+      "src": "/assets/royal-snack-house-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/royal-snack-house-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
