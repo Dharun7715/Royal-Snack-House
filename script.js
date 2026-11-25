@@ -53,7 +53,7 @@ async function submitOrder(event){
  const button=event.submitter;button.disabled=true;button.textContent="Placing order…";
  try{
   const payload=rows.map(r=>({product_id:Number(r.product.id),quantity:r.quantity}));
-  const {data,error}=await authClient.rpc("create_store_order",{p_customer_name:name,p_phone:phone,p_delivery_address:address,p_delivery_type:delivery,p_items:payload,p_coupon_code:String(form.get("couponCode")||"").trim()||null,p_notes:null});
+  const {data,error}=await authClient.rpc("create_store_order",{p_customer_name:name,p_phone:phone,p_delivery_address:address,p_delivery_type:delivery,p_items:payload,p_coupon_code:String(form.get("couponCode")||"").trim()||null,p_notes:["Packaging: "+String(form.get("packaging")||"standard"),String(form.get("giftMessage")||"").trim()?"Gift message: "+String(form.get("giftMessage")).trim():""].filter(Boolean).join(" | ")});
   if(error)throw error;
   cart={};persist();renderCart();formElement.reset();closeCart();
   toast("Order "+data.order_number+" placed successfully! We'll contact you shortly.");
@@ -76,7 +76,7 @@ document.querySelectorAll("[data-filter]").forEach(button=>button.addEventListen
 document.querySelectorAll("[data-category]").forEach(button=>button.addEventListener("click",()=>setCategory(button.dataset.category)));
 el("searchInput").addEventListener("input",renderProducts);
 el("bagButton").addEventListener("click",openCart);el("closeCart").addEventListener("click",closeCart);el("backdrop").addEventListener("click",closeCart);
-el("checkoutForm").addEventListener("submit",submitOrder);const contactForm=el("contactForm");if(contactForm)contactForm.addEventListener("submit",submitContact);
+el("checkoutForm").addEventListener("submit",submitOrder);el("packagingChoice")?.addEventListener("change",()=>{const w=el("giftMessageWrap");if(w)w.hidden=el("packagingChoice").value!=="celebration";});const contactForm=el("contactForm");if(contactForm)contactForm.addEventListener("submit",submitContact);
 el("menuToggle").addEventListener("click",()=>el("navLinks").classList.toggle("open"));
 document.querySelectorAll("#navLinks a").forEach(a=>a.addEventListener("click",()=>el("navLinks").classList.remove("open")));
 el("year").textContent=new Date().getFullYear();renderProducts();renderCart();
