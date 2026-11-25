@@ -174,3 +174,6 @@
 .hamper-card b{font-size:19px;color:#9a753a}.hamper-note{font-size:11px;color:#817968;margin-top:15px}
 @media(max-width:760px){.hamper-grid{grid-template-columns:1fr 1fr}.hamper-card img{height:145px}}
 @media(max-width:480px){.hamper-grid{grid-template-columns:1fr}}
+
+.preorder-meta{display:block;margin:7px 0;color:#9a753a;font-size:11px;font-weight:700;letter-spacing:.03em}
+.spin-panel{text-align:center}.spin-wheel{width:210px;height:210px;border-radius:50%;margin:25px auto;background:conic-gradient(#b58b45 0 45deg,#153b2b 45deg 90deg,#e6c98f 90deg 135deg,#153b2b 135deg 180deg,#b58b45 180deg 225deg,#153b2b 225deg 270deg,#e6c98f 270deg 315deg,#153b2b 315deg);padding:12px;box-shadow:0 12px 35px #102b2030}.spin-wheel-inner{height:100%;border-radius:50%;background:#f7f0df;border:4px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#173b2b}.spin-wheel-inner span{font-size:38px;color:#a57a36}.spin-wheel-inner b{letter-spacing:.15em;font-size:13px}.spin-wheel.spinning{animation:royalSpin 1.6s cubic-bezier(.12,.7,.1,1)}@keyframes royalSpin{to{transform:rotate(1440deg)}}.spin-action{min-width:190px}.spin-panel #spinResult{margin:20px 0;line-height:1.8}.spin-panel #spinHistory{text-align:left;margin-top:20px}
